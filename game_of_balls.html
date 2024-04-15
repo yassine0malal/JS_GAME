@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Catcher</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            display: block;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+       
+        const circleRadius = 20;
+        const circleSpeed = 3;
+        const gravity = 0.1;
+        const playerHeight = 20;
+
+        
+        let playerX = canvas.width / 2;
+        let score = 0;
+
+        class Circle {
+            constructor(x, y, radius, speed) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.speed = speed;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            move() {
+                this.y += this.speed;
+                this.speed += gravity;
+            }
+        }
+
+        
+        function drawPlayer() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(playerX - 50, canvas.height - playerHeight, 100, playerHeight);
+        }
+
+        
+        const circles = [];
+
+        function spawnCircle() {
+            const x = Math.random() * canvas.width;
+            const circle = new Circle(x, 0, circleRadius, circleSpeed);
+            circles.push(circle);
+        }
+
+      
+        function restartGame() {
+            score = 0;
+            circles.length = 0; // Vide le tableau de cercles
+            playerX = canvas.width / 2;
+        }
+
+        // Gestion de la collision entre le joueur et les cercles, ainsi que le sol
+        function checkCollision(circle) {
+            return (circle.y + circle.radius >= canvas.height - playerHeight &&
+                circle.x + circle.radius >= playerX - 50 &&
+                circle.x - circle.radius <= playerX + 50) ||
+                circle.y - circle.radius >= canvas.height;
+        }
+
+        // Boucle de jeu
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            circles.forEach((circle, index) => {
+                circle.move();
+                circle.draw();
+
+                if (checkCollision(circle)) {
+                    circles.splice(index, 1);
+                    if (circle.y - circle.radius >= canvas.height) {
+                        restartGame();
+                    } else {
+                        score++;
+                    }
+                }
+            });
+
+            drawPlayer();
+
+            ctx.fillStyle = '#000';
+            ctx.font = '24px Arial';
+            ctx.fillText('Score: ' + score, 20, 40);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('mousemove', function(event) {
+            playerX = event.clientX;
+        });
+
+        
+        setInterval(spawnCircle, 1000);
+        gameLoop();
+    </script>
+</body>
+</html>
